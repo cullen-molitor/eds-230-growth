@@ -66,17 +66,17 @@ source(here("R", "forest_growth.R"))
    * Graph the results. (15% - we look for an appropriate graphs and good visualization practice - labels, etc)
 
 ```{r}
-time = seq(from=1, to=300) 
+time = seq(from = 1, to = 300, by = 1) 
+forest_size = 10
 
 parameters = list(
-  forest_size = 10,
   canopy_closure_threshold = 50,
   carrying_capacity = 250,
   exp_growth_rate = 0.01,
   lin_growth_rate = 2)
 
 results = ode(
-  y = parameters$forest_size, 
+  y = forest_size, 
   times = time, 
   func = forest_growth, 
   parms = parameters) %>% 
@@ -85,9 +85,9 @@ results = ode(
 ```
 
 ```{r}
-ggplot(results, aes(year,forest_size)) + 
+ggplot(results, aes(year, forest_size)) + 
   geom_point() + 
-  geom_vline(xintercept = parameters$canopy_closure_threshold) +
+  geom_hline(yintercept = parameters$canopy_closure_threshold) +
   labs(y = "Forest Size", x = "Years") + 
   theme_minimal()
 ```
