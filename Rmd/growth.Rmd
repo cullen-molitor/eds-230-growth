@@ -100,8 +100,76 @@ ggplot(results, aes(year, forest_size)) +
    * Graph the results of the sensitivity analysis as a box plot of maximum forest size and a plot of the two Sobol indices (S and T). (25% - correct implementation of Sobol and graph We also look for good graphing style -labels etc)
    
 ```{r}
-
+# Create function to compute max forest_size and mean forest_size form ode results
+compute_metrics <- function(results) {
+  
+  max_forest_size = max(results$forest_size)
+  mean_forest_size = mean(results$forest_size)
+  
+  return(list(max_forest_size = max_forest_size, mean_forest_size = mean_forest_size))
+}
 ```
+
+```{r}
+# Create wrapper function for use with pmap() to vary all parameters 
+p_wrapper = function(canopy_closure_threshold, carrying_capacity, exp_growth_rate, 
+                     lin_growth_rate, forest_size, time, func) {
+  
+  parameters = list(canopy_closure_threshold = canopy_closure_threshold,
+                    carrying_capacity = carrying_capacity,
+                    exp_growth_rate = exp_growth_rate,
+                    lin_growth_rate = lin_growth_rate)
+  
+  results = ode(y = forest_size, times = time, func = func, parms = parameters, method = "daspk") 
+  colnames(results) = c("time", "forest_size")
+  
+  # get max and mean forest_size
+  metrics = compute_metrics(as.data.frame(results))
+  return(metrics)
+}
+```
+
+```{r}
+# Generate normally distributed parameter sets and bind into dataframe
+n_params <- 100
+canopy_closure_threshold <- rnorm(mean = 50, sd = 5, n = n_params)
+carrying_capacity <- rnorm(mean = 250, sd = 25, n = n_params)
+exp_growth_rate <- rnorm(mean = 0.01, sd = 0.001, n = n_params)
+lin_growth_rate <- rnorm(mean = 2, sd = 0.2, n = n_params)
+X1 = cbind.data.frame(canopy_closure_threshold, carrying_capacity = carrying_capacity,
+                      exp_growth_rate = exp_growth_rate, lin_growth_rate = lin_growth_rate)
+
+# Repeat to get second set of samples
+canopy_closure_threshold <- rnorm(mean = 50, sd = 5, n = n_params)
+carrying_capacity <- rnorm(mean = 250, sd = 25, n = n_params)
+exp_growth_rate <- rnorm(mean = 0.01, sd = 0.001, n = n_params)
+lin_growth_rate <- rnorm(mean = 2, sd = 0.2, n = n_params)
+X2 = cbind.data.frame(canopy_closure_threshold, carrying_capacity = carrying_capacity,
+                      exp_growth_rate = exp_growth_rate, lin_growth_rate = lin_growth_rate)
+
+sobol_salt <- sobolSalt(model = NULL, X1, X2, nboot = 300)
+colnames(sobol_salt$X) <- c("canopy_closure_threshold","carrying_capacity",
+                           "exp_growth_rate", "lin_growth_rate")
+
+# Take a look at our parameter sets
+head(sobol_salt$X)
+```
+
+```{r}
+sobol_params_df <- as.data.frame(sobol_salt$X)
+sobol_results <- sobol_params_df %>% pmap(p_wrapper, time = time, forest_size = forest_size,
+                                         func = forest_growth)
+
+sobol_results_df <- sobol_results %>% map_dfr(`[`,c("max_forest_size","mean_forest_size"))
+
+sobol_results_longer <- sobol_results_df %>%
+  pivot_longer(cols = c(max_forest_size, mean_forest_size),
+               names_to = "metric")
+
+ggplot(sobol_results_longer, aes(metric, value, col = metric)) + 
+  geom_boxplot()
+```
+
 
 
 In 2-3 sentences, discuss what the results of your simulation might mean for climate change impacts on forest growth (e.g think about what parameters climate change might influence ). (25% - we look for reasonable discussion that uses the results from your analysis and give extra points for discussions that offer particularly creative or insightful commentary)
