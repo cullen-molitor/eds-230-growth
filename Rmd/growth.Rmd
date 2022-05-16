@@ -176,3 +176,5 @@ In 2-3 sentences, discuss what the results of your simulation might mean for cli
 
 Submit R markdown with model implementation, graphs and sensitivity analysis and R file with your model (Final 10% for well-organized, clearly documented R markdown)
 
+**Climate change is likely to influence initial forest size, C, potentially due to less precipitation and more frequent droughts. Additionally, weather events such as wildfires and heat waves will be further amplified by climate change which can also affect forest size. All of these factors can also change the growth rates (less precipitation and higher temperatures can lead to forests growing more slowly).**
+
