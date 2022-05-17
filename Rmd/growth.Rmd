@@ -37,7 +37,7 @@ You could think of the canopy closure threshold as the size of the forest at whi
 
 You can think of $r$, as early exponential growth rate and $g$ as the linear growth rate once canopy closure has been reached
 
-## #1. Implement this model in R (as a differential equation) 
+**1. Implement this model in R (as a differential equation)**
 
 Grading 25% - we will look for:
 
@@ -51,9 +51,10 @@ Grading 25% - we will look for:
 
 ```{r}
 source(here("R", "forest_growth.R"))
+forest_growth
 ```
 
-2. Run the model for 300 years (using the ODE solver) starting with an initial forest size of 10 kgC, and using the following parameters
+**2. Run the model for 300 years (using the ODE solver) starting with an initial forest size of 10 kgC, and using the following parameters**
 
    * canopy closure threshold of 50 kgC
 
@@ -93,7 +94,7 @@ ggplot(results, aes(year, forest_size)) +
 ```
 
 
-3. Run a Sobol sensitivity analysis that explores how the estimated maximum and mean forest size (e.g maximum and mean values of C over the 300 years) varies with the pre canopy closure growth rate (r) and post-canopy closure growth rate (g) and canopy closure threshold and carrying capacity(K)
+**3. Run a Sobol sensitivity analysis that explores how the estimated maximum and mean forest size (e.g maximum and mean values of C over the 300 years) varies with the pre canopy closure growth rate (r) and post-canopy closure growth rate (g) and canopy closure threshold and carrying capacity(K)**
 
    * Assume that parameters are all normally distributed with means as given above and standard deviation of 10% of mean value
 
@@ -157,10 +158,11 @@ head(sobol_salt$X)
 
 ```{r}
 sobol_params_df <- as.data.frame(sobol_salt$X)
-sobol_results <- sobol_params_df %>% pmap(p_wrapper, time = time, forest_size = forest_size,
-                                         func = forest_growth)
+sobol_results <- sobol_params_df %>% 
+  pmap(p_wrapper, time = time, forest_size = forest_size, func = forest_growth)
 
-sobol_results_df <- sobol_results %>% map_dfr(`[`,c("max_forest_size","mean_forest_size"))
+sobol_results_df <- sobol_results %>% 
+  map_dfr(`[`,c("max_forest_size","mean_forest_size"))
 
 sobol_results_longer <- sobol_results_df %>%
   pivot_longer(cols = c(max_forest_size, mean_forest_size),
@@ -170,6 +172,19 @@ ggplot(sobol_results_longer, aes(metric, value, col = metric)) +
   geom_boxplot()
 ```
 
+```{r}
+sobol_results <- sobol_salt$X %>% 
+  as.data.frame() %>% 
+  pmap(p_wrapper, time = time, 
+       forest_size = forest_size, func = forest_growth) %>% 
+  map_dfr(`[`,c("max_forest_size","mean_forest_size")) %>%
+  pivot_longer(cols = c(max_forest_size, mean_forest_size),
+               names_to = "metric")
+
+ggplot(sobol_results, aes(metric, value, col = metric)) + 
+  geom_boxplot() +
+  theme_minimal()
+```
 
 
 In 2-3 sentences, discuss what the results of your simulation might mean for climate change impacts on forest growth (e.g think about what parameters climate change might influence ). (25% - we look for reasonable discussion that uses the results from your analysis and give extra points for discussions that offer particularly creative or insightful commentary)
