@@ -169,27 +169,89 @@ sobol_results_longer <- sobol_results_df %>%
                names_to = "metric")
 
 ggplot(sobol_results_longer, aes(metric, value, col = metric)) + 
-  geom_boxplot()
+  geom_boxplot() +
+  labs(title = "Mean and max forest size distributions")
+```
+
+
+```{r}
+# Sobol indices for max_forest_size
+sobol_max_forest_size = sensitivity::tell(sobol_salt, sobol_results_df$max_forest_size)
+
+# first-order indices (main effect without co-variance)
+max_forest_size_S <- sobol_max_forest_size$S %>% 
+  rownames_to_column() %>% 
+  rename(parameter = rowname) %>% 
+  mutate(parameter = case_when(
+    parameter == "X1" ~ "canopy_closure_threshold",
+    parameter == "X2" ~ "carrying_capacity",
+    parameter == "X3" ~ "exp_growth_rate",
+    parameter == "X4" ~ "lin_growth_rate"))
+
+# total sensitivity indices
+max_forest_size_T <- sobol_max_forest_size$T %>% 
+  rownames_to_column() %>% 
+  rename(parameter = rowname) %>% 
+  mutate(parameter = case_when(
+    parameter == "X1" ~ "canopy_closure_threshold",
+    parameter == "X2" ~ "carrying_capacity",
+    parameter == "X3" ~ "exp_growth_rate",
+    parameter == "X4" ~ "lin_growth_rate"))
+
+ggplot(max_forest_size_S, aes(x = original, y = parameter)) +
+  geom_col() +
+  labs(title = "Max forest size first order indices",
+       x = "Value",
+       y = "Parameter")
+
+ggplot(max_forest_size_T, aes(x = original, y = parameter)) +
+  geom_col() +
+  labs(title = "Max forest size total sensitivity indices",
+       x = "Value",
+       y = "Parameter")
 ```
 
 ```{r}
-sobol_results <- sobol_salt$X %>% 
-  as.data.frame() %>% 
-  pmap(p_wrapper, time = time, 
-       forest_size = forest_size, func = forest_growth) %>% 
-  map_dfr(`[`,c("max_forest_size","mean_forest_size")) %>%
-  pivot_longer(cols = c(max_forest_size, mean_forest_size),
-               names_to = "metric")
+# Sobol indices for mean_forest_size
 
-ggplot(sobol_results, aes(metric, value, col = metric)) + 
-  geom_boxplot() +
-  theme_minimal()
+sobol_mean_forest_size = sensitivity::tell(sobol_salt, sobol_results_df$mean_forest_size)
+
+# first-order indices (main effect without co-variance)
+mean_forest_size_S <- sobol_mean_forest_size$S %>% 
+  rownames_to_column() %>% 
+  rename(parameter = rowname) %>% 
+  mutate(parameter = case_when(
+    parameter == "X1" ~ "canopy_closure_threshold",
+    parameter == "X2" ~ "carrying_capacity",
+    parameter == "X3" ~ "exp_growth_rate",
+    parameter == "X4" ~ "lin_growth_rate"))
+
+# total sensitivity indices
+mean_forest_size_T <- sobol_mean_forest_size$T %>% 
+  rownames_to_column() %>% 
+  rename(parameter = rowname) %>% 
+  mutate(parameter = case_when(
+    parameter == "X1" ~ "canopy_closure_threshold",
+    parameter == "X2" ~ "carrying_capacity",
+    parameter == "X3" ~ "exp_growth_rate",
+    parameter == "X4" ~ "lin_growth_rate"))
+
+ggplot(mean_forest_size_S, aes(x = original, y = parameter)) +
+  geom_col() +
+  labs(title = "Mean forest size first order indices",
+       x = "Value",
+       y = "Parameter")
+
+ggplot(mean_forest_size_T, aes(x = original, y = parameter)) +
+  geom_col() +
+  labs(title = "Mean forest size total sensitivity indices",
+       x = "Value",
+       y = "Parameter")
 ```
-
 
 In 2-3 sentences, discuss what the results of your simulation might mean for climate change impacts on forest growth (e.g think about what parameters climate change might influence ). (25% - we look for reasonable discussion that uses the results from your analysis and give extra points for discussions that offer particularly creative or insightful commentary)
 
 Submit R markdown with model implementation, graphs and sensitivity analysis and R file with your model (Final 10% for well-organized, clearly documented R markdown)
 
-**Climate change is likely to influence initial forest size, C, potentially due to less precipitation and more frequent droughts. Additionally, weather events such as wildfires and heat waves will be further amplified by climate change which can also affect forest size. All of these factors can also change the growth rates (less precipitation and higher temperatures can lead to forests growing more slowly).**
+**From our analysis we determined that for `max_forest_size`, `carrying_capacity` was the parameter most sensitive to uncertainty---and for `mean_forest_size`, `exp_growth_rate` was the parameter most sensitive to uncertainty. Carrying capacity, which is often limited by water supply, will likely be impacted due to less precipitation and more frequent droughts caused by climate change. Additionally, weather events such as wildfires and heat waves will be further amplified by climate change which can also affect forest size. All of these factors can also change the growth rates (less precipitation and higher temperatures can lead to forests growing more slowly).**
 
